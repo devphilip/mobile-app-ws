@@ -12,9 +12,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.devphilip.app.ws.exception.UserServiceException;
 import com.devphilip.app.ws.service.UserService;
 import com.devphilip.app.ws.shared.dto.UserDto;
 import com.devphilip.app.ws.ui.model.request.UserRequest;
+import com.devphilip.app.ws.ui.model.response.ErrorMessages;
 import com.devphilip.app.ws.ui.model.response.UserRestResponse;
 
 @RestController
@@ -35,11 +37,13 @@ public class UserController {
 	
 	@PostMapping(
 			consumes = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE },
-			produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE }
-			)
-	public UserRestResponse createUser(@RequestBody UserRequest userRequest) {
+			produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
+	public UserRestResponse createUser(@RequestBody UserRequest userRequest) throws Exception {
 		
 		UserRestResponse userResponse = new UserRestResponse();
+		
+		if (userRequest.getFirstName().isEmpty()) 
+			throw new UserServiceException(ErrorMessages.MISSING_REQUIRED_FIELD.getErrorMessage());
 		
 		UserDto userDto = new UserDto();
 		BeanUtils.copyProperties(userRequest, userDto);
@@ -50,18 +54,28 @@ public class UserController {
 		return userResponse;
 	}
 	
-	@PutMapping(
+	@PutMapping(path = "/{userId}",
 			consumes = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE },
-			produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE }
-			)
-	public String updateUser() {
-		return "updateUser() was called";
+			produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
+	public UserRestResponse updateUser(@PathVariable String userId, @RequestBody UserRequest userRequest) {
+		
+UserRestResponse userResponse = new UserRestResponse();
+		
+		if (userRequest.getFirstName().isEmpty()) 
+			throw new UserServiceException(ErrorMessages.MISSING_REQUIRED_FIELD.getErrorMessage());
+		
+		UserDto userDto = new UserDto();
+		BeanUtils.copyProperties(userRequest, userDto);
+		
+		UserDto updatedUser = userService.updateUser(userId, userDto);
+		BeanUtils.copyProperties(updatedUser, userResponse);
+		
+		return userResponse;
 	}
 	
-	@DeleteMapping(
+	@DeleteMapping(path = "/{userId}",
 			consumes = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE },
-			produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE }
-			)
+			produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
 	public String deleteUser() {
 		return "deleteUser() was called";
 	}
