@@ -1,15 +1,19 @@
 package com.devphilip.app.ws.service.impl;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.devphilip.app.ws.exception.UserServiceException;
 import com.devphilip.app.ws.io.entity.UserEntity;
 import com.devphilip.app.ws.io.repository.UserRepository;
 import com.devphilip.app.ws.service.UserService;
@@ -28,6 +32,23 @@ public class UserServiceImpl implements UserService {
 	
 	@Autowired
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+	@Override
+	public List<UserDto> getUsers(int page, int limit) {
+		
+		List<UserDto> returnedValue = new ArrayList<>();
+		if(page >0) page = page-1;
+		Pageable pageableRequest = PageRequest.of(page, limit);
+		List<UserEntity> users = userRepository.findAll(pageableRequest).getContent();
+		
+		for (UserEntity userEntity : users) {
+			UserDto userDto = new UserDto();
+			BeanUtils.copyProperties(userEntity, userDto);
+			returnedValue.add(userDto);
+		}
+		
+		return returnedValue;
+	}
 
 	@Override
 	public UserDto createUser(UserDto user) {
@@ -82,6 +103,13 @@ public class UserServiceImpl implements UserService {
 		BeanUtils.copyProperties(updatedUser, returnedUser);
 		
 		return returnedUser;
+	}
+
+	@Override
+	public void deleteUser(String userId) {
+		UserEntity userEntity = userRepository.findByUserId(userId);
+		if (userEntity == null) throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
+		userRepository.delete(userEntity);
 	}
 
 	@Override
