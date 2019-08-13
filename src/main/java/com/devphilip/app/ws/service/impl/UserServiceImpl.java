@@ -3,6 +3,7 @@ package com.devphilip.app.ws.service.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -18,6 +19,7 @@ import com.devphilip.app.ws.io.entity.UserEntity;
 import com.devphilip.app.ws.io.repository.UserRepository;
 import com.devphilip.app.ws.service.UserService;
 import com.devphilip.app.ws.shared.Utils;
+import com.devphilip.app.ws.shared.dto.AddressDto;
 import com.devphilip.app.ws.shared.dto.UserDto;
 import com.devphilip.app.ws.ui.model.response.ErrorMessages;
 
@@ -54,10 +56,17 @@ public class UserServiceImpl implements UserService {
 	public UserDto createUser(UserDto user) {
 				
 		if (userRepository.findByEmail(user.getEmail()) != null)
-			throw new RuntimeException("Record already exists");
+			throw new RuntimeException("Record already exists");		
+		
+		for (int i = 0; i < user.getAddresses().size(); i++) {
+			AddressDto addressDto = user.getAddresses().get(i);;
+			addressDto.setUserDetails(user);
+			addressDto.setAddressId(utils.generateAdressId(30));
+			user.getAddresses().set(i, addressDto);
+		}
 
-		UserEntity userEntity = new UserEntity();
-		BeanUtils.copyProperties(user, userEntity);
+		ModelMapper modelMapper = new ModelMapper();
+		UserEntity userEntity = modelMapper.map(user, UserEntity.class);
 
 		String publicUserId = utils.generateUserId(30);
 		userEntity.setUserId(publicUserId);
@@ -65,8 +74,7 @@ public class UserServiceImpl implements UserService {
 
 		UserEntity storedUser = userRepository.save(userEntity);
 
-		UserDto userDto = new UserDto();
-		BeanUtils.copyProperties(storedUser, userDto);
+		UserDto userDto = modelMapper.map(storedUser, UserDto.class);
 		
 		return userDto;
 	}

@@ -1,17 +1,19 @@
 package com.devphilip.app.ws.ui.model.response;
 
 import java.util.Date;
-
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class ErrorMessage {
-	
 	private Date timestamp;
 	private String message;
+	
+	public ErrorMessage() {}
 
+	public ErrorMessage(Date timestamp, String message) {
+		this.timestamp = timestamp;
+		this.message = message;
+	}
+	
 }
